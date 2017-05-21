@@ -151,15 +151,15 @@ class SAPB1Adaptor(object):
         cols = '*'
         if len(columns) > 0:
             cols = " ,".join(columns)
-        ops = {key: '=' if 'op' not in params[key].keys() else params[key]['op'] for key in params.keys()}
+        ops = {key: '=' if 'op' not in list(params[key].keys()) else params[key]['op'] for key in list(params.keys())}
         sql = """SELECT top {0} {1} FROM dbo.ORDR""".format(num, cols)
         if len(params) > 0:
-            sql = sql + ' WHERE ' + " AND ".join(["{0} {1} %({2})s".format(k, ops[k], k) for k in params.keys()])
-        self.cursorAdaptor.sqlSrvCursor.execute(sql, {key: params[key]['value'] for key in params.keys()})
+            sql = sql + ' WHERE ' + " AND ".join(["{0} {1} %({2})s".format(k, ops[k], k) for k in list(params.keys())])
+        self.cursorAdaptor.sqlSrvCursor.execute(sql, {key: params[key]['value'] for key in list(params.keys())})
         orders = []
         for row in self.cursorAdaptor.sqlSrvCursor:
             order = {}
-            for k, v in row.items():
+            for k, v in list(row.items()):
                 value = ''
                 if type(v) is datetime.datetime:
                     value = v.strftime("%Y-%m-%d %H:%M:%S")
@@ -279,15 +279,15 @@ class SAPB1Adaptor(object):
             cols = " ,".join(columns)
 
         sql = """SELECT top {0} {1} FROM dbo.OCPR""".format(num, cols)
-        params = dict({(k, 'null' if v is None else v) for k, v in contact.items()})
+        params = dict({(k, 'null' if v is None else v) for k, v in list(contact.items())})
         params['cardcode'] = cardCode
-        sql = sql + ' WHERE ' + " AND ".join(["{0} = %({1})s".format(k, k) for k in params.keys()])
+        sql = sql + ' WHERE ' + " AND ".join(["{0} = %({1})s".format(k, k) for k in list(params.keys())])
 
         self.cursorAdaptor.sqlSrvCursor.execute(sql, params)
         contacts = []
         for row in self.cursorAdaptor.sqlSrvCursor:
             contact = {}
-            for k, v in row.items():
+            for k, v in list(row.items()):
                 value = ''
                 if type(v) is datetime.datetime:
                     value = v.strftime("%Y-%m-%d %H:%M:%S")
@@ -380,7 +380,7 @@ class SAPB1Adaptor(object):
         self.cursorAdaptor.sqlSrvCursor.execute(sql)
         expnsNames = []
         for row in self.cursorAdaptor.sqlSrvCursor:
-            for k, v in row.items():
+            for k, v in list(row.items()):
                 expnsNames.append(v)
         return expnsNames
 
@@ -391,7 +391,7 @@ class SAPB1Adaptor(object):
         self.cursorAdaptor.sqlSrvCursor.execute(sql)
         trnspNames = []
         for row in self.cursorAdaptor.sqlSrvCursor:
-            for k, v in row.items():
+            for k, v in list(row.items()):
                 trnspNames.append(v)
         return trnspNames
 
@@ -400,7 +400,7 @@ class SAPB1Adaptor(object):
         self.cursorAdaptor.sqlSrvCursor.execute(sql)
         payMethCods = []
         for row in self.cursorAdaptor.sqlSrvCursor:
-            for k, v in row.items():
+            for k, v in list(row.items()):
                 payMethCods.append(v)
         return payMethCods
 
@@ -410,7 +410,7 @@ class SAPB1Adaptor(object):
         taxCodes = []
         for row in self.cursorAdaptor.sqlSrvCursor:
             taxCode = {}
-            for k, v in row.items():
+            for k, v in list(row.items()):
                 taxCode[k] = str(v)
             taxCodes.append(taxCode)
         return taxCodes
@@ -429,23 +429,23 @@ class SAPB1Adaptor(object):
         order.CardName = name
         order.DocCurrency = self.getMainCurrency()
         order.ContactPersonCode = self.getContactPersonCode(o)
-        if 'expenses_freightname' in o.keys():
+        if 'expenses_freightname' in list(o.keys()):
             order.Expenses.ExpenseCode = self.getExpnsCode(o['expenses_freightname'])
             order.Expenses.LineTotal = o['expenses_linetotal']
             order.Expenses.TaxCode = o['expenses_taxcode']
-        if 'discount_percent' in o.keys():
+        if 'discount_percent' in list(o.keys()):
             order.DiscountPercent = o['discount_percent']
 
         # Set Shipping Type
-        if 'transport_name' in o.keys():
+        if 'transport_name' in list(o.keys()):
             order.TransportationCode = self.getTrnspCode(o['transport_name'])
 
         # Set Payment Method
-        if 'payment_method' in o.keys():
+        if 'payment_method' in list(o.keys()):
             order.PaymentMethod = o['payment_method']
 
         # Set Magento Order Inc Id
-        if 'fe_order_id_udf' in o.keys():
+        if 'fe_order_id_udf' in list(o.keys()):
             order.UserFields.Fields.Item(o['fe_order_id_udf']).Value = str(o['fe_order_id'])
         else:
             order.NumAtCard = str(o['fe_order_id'])
@@ -491,7 +491,7 @@ class SAPB1Adaptor(object):
             raise Exception(error)
         else:
             params = None
-            if 'fe_order_id_udf' in o.keys():
+            if 'fe_order_id_udf' in list(o.keys()):
                 params = {o['fe_order_id_udf']: {'value': str(o['fe_order_id'])}}
             else:
                 params = {'NumAtCard': {'value': str(o['fe_order_id'])}}
@@ -504,7 +504,7 @@ class SAPB1Adaptor(object):
         """
         order = self.comAdaptor.company.GetBusinessObject(self.constants.oOrders)
         params = None
-        if 'fe_order_id_udf' in o.keys():
+        if 'fe_order_id_udf' in list(o.keys()):
             params = {o['fe_order_id_udf']: {'value': str(o['fe_order_id'])}}
         else:
             params = {'NumAtCard': {'value': str(o['fe_order_id'])}}
@@ -533,13 +533,13 @@ class SAPB1Adaptor(object):
             'DocEntry' : shipmentId
         }
         if len(params) > 0:
-            sql = sql + ' WHERE ' + " AND ".join(["{0} = %({1})s".format(k, k) for k in params.keys()])
+            sql = sql + ' WHERE ' + " AND ".join(["{0} = %({1})s".format(k, k) for k in list(params.keys())])
 
         self.cursorAdaptor.sqlSrvCursor.execute(sql, params)
         items = []
         for row in self.cursorAdaptor.sqlSrvCursor:
             item = {}
-            for k, v in row.items():
+            for k, v in list(row.items()):
                 value = ''
                 if type(v) is datetime.datetime:
                     value = v.strftime("%Y-%m-%d %H:%M:%S")
@@ -557,15 +557,15 @@ class SAPB1Adaptor(object):
             columns.append('DocEntry')
         if len(columns) > 0:
             cols = " ,".join(columns)
-        ops = {key: '=' if 'op' not in params[key].keys() else params[key]['op'] for key in params.keys()}
+        ops = {key: '=' if 'op' not in list(params[key].keys()) else params[key]['op'] for key in list(params.keys())}
         sql = """SELECT top {0} {1} FROM dbo.ODLN""".format(num, cols)
         if len(params) > 0:
-            sql = sql + ' WHERE ' + " AND ".join(["{0} {1} %({2})s".format(k, ops[k], k) for k in params.keys()])
-        self.cursorAdaptor.sqlSrvCursor.execute(sql, {key: params[key]['value'] for key in params.keys()})
+            sql = sql + ' WHERE ' + " AND ".join(["{0} {1} %({2})s".format(k, ops[k], k) for k in list(params.keys())])
+        self.cursorAdaptor.sqlSrvCursor.execute(sql, {key: params[key]['value'] for key in list(params.keys())})
         shipments = []
         for row in self.cursorAdaptor.sqlSrvCursor:
             shipment = {}
-            for k, v in row.items():
+            for k, v in list(row.items()):
                 value = ''
                 if type(v) is datetime.datetime:
                     value = v.strftime("%Y-%m-%d %H:%M:%S")
